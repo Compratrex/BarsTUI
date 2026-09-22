@@ -1,0 +1,15 @@
+node_modules/
+.auth/
+.cache/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.idea/
+*.iml
+dist/
+release/
+native/
+# Unrelated local utility containing private database configuration.
+/scripts/download_receipt_screenshots.py

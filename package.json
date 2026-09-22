@@ -1,0 +1,48 @@
+{
+  "name": "bars-helper",
+  "version": "0.9.0",
+  "codename": "alpha",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --import tsx src/cli.tsx",
+    "login:reset": "node --import tsx src/cli.tsx --forget-credentials",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "node --import tsx --test \"tests/*.test.ts\" \"tests/*.test.tsx\" \"tests/*.test.mjs\"",
+    "test:integration": "node --import tsx --test \"tests/integration/*.test.ts\"",
+    "login": "node scripts/login.js",
+    "journals": "node --import tsx scripts/list-journals.js",
+    "build": "node scripts/build.mjs",
+    "start:built": "node scripts/launch.mjs",
+    "release:build": "npm run build && node scripts/build-release.mjs",
+    "command:install": "node scripts/install-command.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@napi-rs/keyring": "^2.1.0",
+    "cheerio": "^1.2.0",
+    "ink": "^7.1.1",
+    "ink-text-input": "^6.0.0",
+    "playwright": "^1.53.0",
+    "react": "^19.3.0",
+    "undici": "^7.29.1",
+    "wrap-ansi": "^10.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.3",
+    "@types/react": "^19.3.0",
+    "ink-testing-library": "^4.0.0",
+    "prettier": "3.9.8",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  },
+  "description": "Терминальный клиент БАРС МЭИ: посещаемость, расписание, оценки и почта",
+  "bin": {
+    "bars": "scripts/launch.mjs",
+    "bars-helper": "scripts/launch.mjs"
+  }
+}

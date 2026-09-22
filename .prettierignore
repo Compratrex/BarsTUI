@@ -1,0 +1,7 @@
+node_modules/
+dist/
+release/
+.auth/
+.cache/
+.env*
+scripts/download_receipt_screenshots.py
