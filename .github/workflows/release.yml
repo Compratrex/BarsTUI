@@ -2,6 +2,11 @@ name: Build desktop releases
 
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Existing release to attach archives to (empty: build artifacts only)'
+        required: false
+        type: string
   push:
     tags: ['v*']
 
@@ -46,8 +51,8 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  draft-release:
-    if: startsWith(github.ref, 'refs/tags/')
+  release-assets:
+    if: startsWith(github.ref, 'refs/tags/') || inputs.release_tag != ''
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -58,12 +63,30 @@ jobs:
         with:
           path: release-assets
           merge-multiple: true
-      - name: Create release draft
+      - name: Attach archives or create release draft
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: >-
-          gh release create "$RELEASE_TAG" release-assets/*.zip release-assets/*.sha256
-          --verify-tag --draft --prerelease
-          --title "Bars Helper $RELEASE_TAG"
-          --notes-file docs/RELEASE-NOTES.md
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+          EXISTING_RELEASE: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          cd release-assets
+          sha256sum --check *.sha256
+          cd ..
+          if [ -n "$EXISTING_RELEASE" ]; then
+            gh release view "$RELEASE_TAG" >/dev/null
+            git fetch origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
+            # Packaging-only fixes can ship without changing the release's application code.
+            git diff --exit-code "refs/tags/$RELEASE_TAG" HEAD -- \
+              src docs README.md package.json package-lock.json \
+              scripts/launch.mjs scripts/install-command.mjs scripts/windows-dpapi.ps1 \
+              scripts/touch-id.swift 'Bars Helper.command' 'Bars Helper.cmd' \
+              'Install bars.command' 'Install bars.cmd'
+            gh release upload "$RELEASE_TAG" release-assets/*.zip release-assets/*.sha256
+          else
+            gh release create "$RELEASE_TAG" release-assets/*.zip release-assets/*.sha256 \
+              --verify-tag --draft --prerelease \
+              --title "Bars Helper $RELEASE_TAG" \
+              --notes-file docs/RELEASE-NOTES.md
+          fi
