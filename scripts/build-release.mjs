@@ -16,6 +16,7 @@ import { dirname, join } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
+import { moveReleaseDirectory } from './release-files.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const info = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
@@ -43,7 +44,7 @@ function run(program, args, { cwd = stage, env = {} } = {}) {
       shell: false,
     });
     child.once('error', reject);
-    child.once('exit', (code) =>
+    child.once('close', (code) =>
       code === 0 ? resolve() : reject(new Error(`${program}: код завершения ${code}`)),
     );
   });
@@ -185,7 +186,7 @@ await writeFile(
 
 // Move before testing, so machine-specific source paths cannot accidentally make the test pass.
 await rm(destination, { recursive: true, force: true });
-await rename(stage, destination);
+await moveReleaseDirectory(stage, destination);
 const runtime = join(destination, 'runtime', process.platform === 'win32' ? 'node.exe' : 'node');
 await run(runtime, [join(destination, 'scripts/launch.mjs'), '--version'], { cwd: output });
 await run(runtime, [join(destination, 'scripts/launch.mjs'), '--self-test'], { cwd: output });
